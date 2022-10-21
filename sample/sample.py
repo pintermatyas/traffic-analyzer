@@ -4,6 +4,7 @@ import numpy as np
 
 input_file_name = 'sample2.mp4'
 output_file_name = 'sampleOutput.mp4'
+model_file_path = 'C:/Egyetem/5.felev/Temalab/yolov3-608.weights'
 
 cap = cv2.VideoCapture(input_file_name)
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -23,7 +24,7 @@ with open(classesFile, 'rt') as f:
     classNames = f.read().rstrip('\n').split('\n')
 
 model_configuration = 'yolov3.cfg'
-model_weights = 'yolov3-608.weights'
+model_weights = model_file_path
 
 net = cv2.dnn.readNetFromDarknet(model_configuration, model_weights)
 
