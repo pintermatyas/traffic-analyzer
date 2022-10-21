@@ -9,17 +9,16 @@ now = datetime.now()
 date_string = now.strftime("%Y-%m-%d-%H-%M-%S")
 
 input_file_name = 'sample2.mp4'
-print(type(date_string))
+input_file_path = '/input' + input_file_name
 output_file_name = date_string + '.mp4'
-output_file_name_path = 'output/' + output_file_name
-print(output_file_name_path)
+output_file_path = 'output/' + output_file_name
 model_file_path = 'C:/Egyetem/5.felev/Temalab/yolov3-608.weights'
 
 cap = cv2.VideoCapture(input_file_name)
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter(output_file_name_path, fourcc, 30, (width, height))
+out = cv2.VideoWriter(output_file_path, fourcc, 30, (width, height))
 
 
 yolo_res=608
@@ -90,7 +89,7 @@ while True:
         cv2.putText(img, f'CURRENT TRAFFIC: LOW', (width-300, height-30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
 
 
-    cv2.imshow('Image', img)
+    cv2.imshow(date_string, img)
     img = cv2.resize(img, (width, height))
     out.write(img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
