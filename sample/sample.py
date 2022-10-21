@@ -1,16 +1,25 @@
+import datetime
+
 import cv2
 import numpy as np
+from datetime import datetime
 
+
+now = datetime.now()
+date_string = now.strftime("%Y-%m-%d-%H-%M-%S")
 
 input_file_name = 'sample2.mp4'
-output_file_name = 'sampleOutput.mp4'
+print(type(date_string))
+output_file_name = date_string + '.mp4'
+output_file_name_path = 'output/' + output_file_name
+print(output_file_name_path)
 model_file_path = 'C:/Egyetem/5.felev/Temalab/yolov3-608.weights'
 
 cap = cv2.VideoCapture(input_file_name)
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter(output_file_name, fourcc, 30, (width, height))
+out = cv2.VideoWriter(output_file_name_path, fourcc, 30, (width, height))
 
 
 yolo_res=608
