@@ -3,11 +3,11 @@ import datetime
 import cv2
 import numpy as np
 from datetime import datetime
-from Vehicle import Vehicle
+from vehicle import Vehicle
 
 # If you don't want to save a video every time you run the script, set it to False
 # Else set it to True
-TEST_MODE = True
+TEST_MODE = False
 
 now = datetime.now()
 date_string = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -27,10 +27,9 @@ if not TEST_MODE:
     out = cv2.VideoWriter(output_file_path, fourcc, 30, (width, height))
 
 # car, motorbike, bus, truck
-accepted_class_ids = [2,3,5,7]
+accepted_class_ids = [2, 3, 5, 7]
 
-
-yolo_res=608
+yolo_res = 608
 conf_threshold = 0.5
 nms_threshold = 0.5
 
@@ -48,9 +47,9 @@ net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_OPENCL)
 
-
 previous_frame_vehicles = []
 highest_id = 0
+
 
 def findObjects(outputs, img):
     global previous_frame_vehicles
@@ -60,6 +59,7 @@ def findObjects(outputs, img):
     class_ids = []
     confs = []
     vehicles = []
+
     for output in outputs:
         for detection in output:
             scores = detection[5:]
@@ -68,28 +68,65 @@ def findObjects(outputs, img):
             if class_id in accepted_class_ids:
                 if confidence > conf_threshold:
                     w, h = int(detection[2] * width), int(detection[3] * height)
-                    x,y = int((detection[0] * width) - w/2), int((detection[1] * height) - h/2)
-                    bounding_boxes.append([x,y,w,h])
+                    x, y = int((detection[0] * width) - w / 2), int((detection[1] * height) - h / 2)
+                    bounding_boxes.append([x, y, w, h])
                     vehicles.append(Vehicle(class_id, x, y, w, h, img, highest_id))
                     class_ids.append(class_id)
                     confs.append(float(confidence))
 
     indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, conf_threshold, nms_threshold)
 
-    for v in vehicles:
-        if len(previous_frame_vehicles) > 0:
-            v.track_vehicle(previous_frame_vehicles)
-        if v.id is None:
-            v.id = highest_id
-            highest_id = highest_id+1
+    if len(vehicles) > 0:
+
+        # processed_vehicles = []
+        #
+        # for prev in previous_frame_vehicles:
+        #     closest = prev.find_closest(vehicles)[0]
+        #     if prev.in_range(closest.pos_x, closest.pos_y):
+        #         prev.id = closest.id
+        #         processed_vehicles.append(closest)
+        #     else:
+        #         prev.id = highest_id
+        #         highest_id = highest_id + 1
+        #     if prev.id == highest_id:
+        #         highest_id = highest_id + 1
+        #     if prev.id is None:
+        #         prev.id = highest_id
+        #         highest_id = highest_id + 1
+
+        for v in vehicles:
+
+            # if v not in processed_vehicles:
+            #     v.id = highest_id
+            #     highest_id = highest_id + 1
+
+            if len(previous_frame_vehicles) > 0:
+                closest = v.find_closest(previous_frame_vehicles)[0]
+                if v.in_range(closest.pos_x, closest.pos_y):
+                    v.id = closest.id
+                    # previous_frame_vehicles.remove(closest)
+                else:
+                    v.id = highest_id
+                    highest_id = highest_id + 1
+
+                # if v.id == highest_id:
+                #     highest_id = highest_id + 1
+
+                if v.id is None:
+                    v.id = highest_id
+                    highest_id = highest_id + 1
+
+            else:
+                v.id = highest_id
+                highest_id = highest_id + 1
 
     for i in indexes:
         box = bounding_boxes[i]
-        x,y,w,h = box[0], box[1], box[2], box[3]
+        x, y, w, h = box[0], box[1], box[2], box[3]
 
-        cv2.rectangle(img, (x,y), (x+w, y+h), (255,0,0), 2)
+        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
         # cv2.putText(img, f'{classNames[class_ids[i]].upper()} {int(confs[i] * 1000)/10}%', (x,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0), 2)
-        cv2.putText(img, f'{vehicles[i].id} {int(confs[i] * 1000)/10}%', (x,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0), 2)
+        cv2.putText(img, f'{vehicles[i].id}', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
 
     previous_frame_vehicles = vehicles.copy()
     vehicles.clear()
@@ -109,14 +146,17 @@ while True:
     outputs = net.forward(output_names)
 
     number_of_cars = findObjects(outputs, img)
-    cv2.putText(img, f'CURRENT NUMBER OF VEHICLES: {number_of_cars}', (width - 650, height - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-    if(number_of_cars > 20):
-        cv2.putText(img, f'CURRENT TRAFFIC: HIGH', (width-300, height-30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
-    elif(number_of_cars > 10):
-        cv2.putText(img, f'CURRENT TRAFFIC: MEDIUM', (width-300, height-30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
+    cv2.putText(img, f'CURRENT NUMBER OF VEHICLES: {number_of_cars}', (width - 650, height - 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    if (number_of_cars > 20):
+        cv2.putText(img, f'CURRENT TRAFFIC: HIGH', (width - 300, height - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                    (0, 0, 255), 2)
+    elif (number_of_cars > 10):
+        cv2.putText(img, f'CURRENT TRAFFIC: MEDIUM', (width - 300, height - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                    (0, 0, 255), 2)
     else:
-        cv2.putText(img, f'CURRENT TRAFFIC: LOW', (width-300, height-30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
-
+        cv2.putText(img, f'CURRENT TRAFFIC: LOW', (width - 300, height - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                    (0, 0, 255), 2)
 
     cv2.imshow(date_string, img)
 
