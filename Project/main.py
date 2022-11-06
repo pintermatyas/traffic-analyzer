@@ -5,14 +5,14 @@ import numpy as np
 from datetime import datetime
 from vehicle import Vehicle
 
-# If you don't want to save a video every time you run the script, set it to False
+# If you want to save the output video every time you run the script, set it to False
 # Else set it to True
 TEST_MODE = False
 
 now = datetime.now()
 date_string = now.strftime("%Y-%m-%d-%H-%M-%S")
 
-input_file_name = 'sample.mp4'
+input_file_name = 'sample2.mp4'
 input_file_path = 'input/' + input_file_name
 output_file_name = date_string + '.mp4'
 output_file_path = 'output/' + output_file_name
@@ -30,7 +30,7 @@ if not TEST_MODE:
 accepted_class_ids = [2, 3, 5, 7]
 
 yolo_res = 608
-conf_threshold = 0.5
+conf_threshold = 0.6
 nms_threshold = 0.5
 
 classNames = []
@@ -57,6 +57,7 @@ def findObjects(outputs, img):
     height, width, cT = img.shape
     bounding_boxes = []
     class_ids = []
+    ids = []
     confs = []
     vehicles = []
 
@@ -69,10 +70,11 @@ def findObjects(outputs, img):
                 if confidence > conf_threshold:
                     w, h = int(detection[2] * width), int(detection[3] * height)
                     x, y = int((detection[0] * width) - w / 2), int((detection[1] * height) - h / 2)
-                    bounding_boxes.append([x, y, w, h])
-                    vehicles.append(Vehicle(class_id, x, y, w, h, img, highest_id))
-                    class_ids.append(class_id)
-                    confs.append(float(confidence))
+                    if h > height / 25:
+                        bounding_boxes.append([x, y, w, h])
+                        vehicles.append(Vehicle(class_id, x, y, w, h, img, highest_id))
+                        class_ids.append(class_id)
+                        confs.append(float(confidence))
 
     indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, conf_threshold, nms_threshold)
 
@@ -102,7 +104,7 @@ def findObjects(outputs, img):
 
             if len(previous_frame_vehicles) > 0:
                 closest = v.find_closest(previous_frame_vehicles)[0]
-                if v.in_range(closest.pos_x, closest.pos_y):
+                if v.in_range(closest.pos_x, closest.pos_y, closest.width, closest.height):
                     v.id = closest.id
                     # previous_frame_vehicles.remove(closest)
                 else:
@@ -120,13 +122,21 @@ def findObjects(outputs, img):
                 v.id = highest_id
                 highest_id = highest_id + 1
 
+            ids.append(v.id)
+
     for i in indexes:
         box = bounding_boxes[i]
         x, y, w, h = box[0], box[1], box[2], box[3]
 
         cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
         # cv2.putText(img, f'{classNames[class_ids[i]].upper()} {int(confs[i] * 1000)/10}%', (x,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0), 2)
-        cv2.putText(img, f'{vehicles[i].id}', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
+        dirstr = ""
+        if vehicles[i].dir == 0:
+            dirstr = "Coming torwards us"
+        else:
+            dirstr = "Going away"
+        cv2.putText(img, f'id: {vehicles[i].id}', (x, y - 10), cv2.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 255), 2)
+        cv2.putText(img, f'Dir: {dirstr}', (x, y + h + 15), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 255), 2)
 
     previous_frame_vehicles = vehicles.copy()
     vehicles.clear()

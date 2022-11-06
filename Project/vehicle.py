@@ -11,6 +11,7 @@ class Vehicle:
         self.height = height
         self.img = img
         self.highest_id = highest_id
+        self.dir = None
 
     def track_vehicle(self, vehicles):
         image_width, image_height = self.img.shape[0], self.img.shape[1]
@@ -18,16 +19,16 @@ class Vehicle:
         x_threshold = image_width // 10
         y_threshold = image_height // 5
         closest_vehicle = self.find_closest(vehicles)[0]
-        if self.in_range(closest_vehicle.pos_x, closest_vehicle.pos_y, x_threshold, y_threshold):
+        if self.in_range(closest_vehicle.pos_x, closest_vehicle.pos_y, closest_vehicle.width, closest_vehicle.height):
             self.id = closest_vehicle.id
             vehicles.remove(closest_vehicle)
         else:
             self.id = self.highest_id
 
-    def in_range(self, pos_x, pos_y):
+    def in_range(self, pos_x, pos_y, x_threshold, y_threshold):
         image_width, image_height = self.img.shape[1], self.img.shape[0]
-        x_threshold = image_width // 30
-        y_threshold = image_height // 10
+        # x_threshold = image_width // 30
+        # y_threshold = image_height // 10
         if pos_x + x_threshold >= self.pos_x >= pos_x - x_threshold:
             if pos_y + y_threshold >= self.pos_y >= pos_y - y_threshold:
                 return True
@@ -41,4 +42,11 @@ class Vehicle:
             if smallest_distance > dist:
                 smallest_distance_vehicle = v
                 smallest_distance = dist
+
+        if self.pos_y - smallest_distance_vehicle.pos_y > 0:
+            self.dir = 0
+        elif self.pos_y - smallest_distance_vehicle.pos_y < 0:
+            self.dir = 1
+        else:
+            self.dir = smallest_distance_vehicle.dir
         return [smallest_distance_vehicle, smallest_distance]
