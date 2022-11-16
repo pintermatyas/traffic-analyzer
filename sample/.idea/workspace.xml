@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f13b5e4b-2edb-4c36-8770-3d280fa75591" name="Changes" comment="ID: working">
-      <change beforePath="$PROJECT_DIR$/../Project/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Project/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Project/vehicle.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Project/vehicle.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -23,16 +21,16 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/DeepSortWithYolov3-4e74e594967ad4853ae666c899e5f0ace4e0390f/DeepSortWithYolov3-4e74e594967ad4853ae666c899e5f0ace4e0390f&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Egyetem/5.felev/Mesteréges intelligencia/HF/MI-HF-2022-LunarLander"
   }
-}</component>
+}]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -43,7 +41,8 @@
       <updated>1667739771852</updated>
       <workItem from="1667739773500" duration="7521000" />
       <workItem from="1667748452935" duration="203000" />
-      <workItem from="1667754081804" duration="3511000" />
+      <workItem from="1667754081804" duration="3803000" />
+      <workItem from="1667767521639" duration="20000" />
     </task>
     <task id="LOCAL-00001" summary="ID: working">
       <created>1667747893589</created>

@@ -3,7 +3,7 @@ import numpy as np
 
 class Vehicle:
     def __init__(self, class_id, pos_x, pos_y, width, height, img, highest_id):
-        self.id = None
+        self.id = ""
         self.class_id = class_id  # Class id of vehicle
         self.pos_x = pos_x
         self.pos_y = pos_y
@@ -12,6 +12,7 @@ class Vehicle:
         self.img = img
         self.highest_id = highest_id
         self.dir = None
+        self.velocity = 0
 
     def track_vehicle(self, vehicles):
         image_width, image_height = self.img.shape[0], self.img.shape[1]
@@ -26,7 +27,7 @@ class Vehicle:
             self.id = self.highest_id
 
     def in_range(self, pos_x, pos_y, x_threshold, y_threshold):
-        image_width, image_height = self.img.shape[1], self.img.shape[0]
+        # image_width, image_height = self.img.shape[1], self.img.shape[0]
         # x_threshold = image_width // 30
         # y_threshold = image_height // 10
         if pos_x + x_threshold >= self.pos_x >= pos_x - x_threshold:
@@ -50,3 +51,5 @@ class Vehicle:
         else:
             self.dir = smallest_distance_vehicle.dir
         return [smallest_distance_vehicle, smallest_distance]
+
+

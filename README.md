@@ -13,6 +13,14 @@ Tracking után
 
 ![Output](sampleOutputGifTracking.gif)
 
+Sebesség meghatározása
+
+![Output](sampleOutputGifSpeed.gif)
+
+Heatmap az elhaladó autókról, a sample2 file-on futtatva:
+
+![Output](sample2_detections.png)
+
 ## _TODO_
 - GPU-ra kiszervezés, mert CPU-n lassú
 - Úgy tűnik, hogy 
