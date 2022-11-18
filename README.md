@@ -6,23 +6,20 @@ A sample.py fileban a model_file_path változó helyére írd be az előző .wei
 
 Tracking előtt:
 
-![Output](sampleOutputGif.gif)
+![Output](md_files/sampleOutputGif.gif)
 
 
-Tracking után
+Tracking és sebességmeghatározás után:
 
-![Output](sampleOutputGifTracking.gif)
+![Output](md_files/sampleOutputGifTracking.gif)
 
-Sebesség meghatározása
-
-![Output](sampleOutputGifSpeed.gif)
+Le lett korlátozva a felismeréshez használható rész az alsó felére a képnek, hogy ne legyen olyan sok fals pozitív felismerés, amit egy frame után el is veszít. Az autók irányát színkódoltam: a felénk haladó zöld, az elfele haladó kék téglalapot kap.
 
 Heatmap az elhaladó autókról, a sample2 file-on futtatva:
 
-![Output](sample2_detections.png)
+![Output](md_files/sample2_detections.png)
 
 ## _TODO_
 - GPU-ra kiszervezés, mert CPU-n lassú
 - Úgy tűnik, hogy 
   - Egy ID-t több autónak is kiad &rarr; Ennek javítása
-  - Az ID-k osztásánál többször van az, hogy nem eggyel növeli az új autó ID-jét az előzőhöz képest
