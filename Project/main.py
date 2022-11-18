@@ -2,16 +2,18 @@ import cv2
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
+
+from Project.statistics import calculate_speed
 from vehicle import Vehicle
 
-# If you want to save the output video every time you run the script, set it to False
+# If you don't want to save the output video every time you run the script, set it to False
 # Else set it to True
-SAVE_VIDEO = True
+SAVE_VIDEO = False
 
 now = datetime.now()
 DATE_STRING = now.strftime("%Y-%m-%d-%H-%M-%S")
 
-INPUT_FILE_NAME = 'sample2.mp4'
+INPUT_FILE_NAME = 'sample.mp4'
 INPUT_FILE_PATH = 'input/' + INPUT_FILE_NAME
 OUTPUT_FILE_NAME = DATE_STRING + '.mp4'
 OUTPUT_FILE_PATH = 'output/' + OUTPUT_FILE_NAME
@@ -52,27 +54,6 @@ highest_id = 0
 MAX_DETECTION_HEIGHT = FRAME_HEIGHT//2
 
 
-def calculate_speed(current_vehicle, previous_frame_vehicle):
-    # Width of vehicle is approx. 2 m
-    vehicle_width = 2
-    curr_x, curr_y = current_vehicle.pos_x, current_vehicle.pos_y
-    curr_w, curr_h = current_vehicle.width, current_vehicle.height
-    prev_x, prev_y = previous_frame_vehicle.pos_x, previous_frame_vehicle.pos_y
-    prev_w, prev_h = previous_frame_vehicle.width, previous_frame_vehicle.height
-
-    if curr_y < FRAME_HEIGHT/2:
-        vehicle_width = 2 + (FRAME_HEIGHT/2 - curr_y)/(FRAME_HEIGHT/2) * 2
-
-    meter_per_pixel = curr_w/vehicle_width
-    framerate = cap.get(cv2.CAP_PROP_FPS)
-    frame_elapsed_time = 1 / framerate
-    distance_from_previous_frame = abs(np.sqrt(np.power(curr_x + curr_w / 2 - prev_x + prev_w / 2, 2) +
-                                               np.power(curr_y + curr_h / 2 - prev_y + prev_h / 2, 2)))
-    distance_in_meters = distance_from_previous_frame * vehicle_width / curr_w
-    vel = distance_in_meters / frame_elapsed_time
-    current_vehicle.velocity = int(vel)
-
-
 def find_objects(outputs, image):
     global previous_frame_vehicles
     global highest_id
@@ -104,35 +85,37 @@ def find_objects(outputs, image):
 
     indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, CONF_THRESHOLD, NMS_THRESHOLD)
 
-    if len(vehicles) > 0:
+    if len(indexes) > 0:
 
-        for v in vehicles:
-            if v.pos_y > MAX_DETECTION_HEIGHT:
+        for i in indexes:
+            if vehicles[i].pos_y > MAX_DETECTION_HEIGHT:
                 if len(previous_frame_vehicles) > 0:
-                    closest = v.find_closest(previous_frame_vehicles)[0]
-                    if v.in_range(closest.pos_x, closest.pos_y, closest.width/2, closest.height/2):
-                        v.id = closest.id
-                        v.age = closest.age + 1
+                    closest = vehicles[i].find_closest(previous_frame_vehicles)[0]
+                    if vehicles[i].in_range(closest.pos_x, closest.pos_y, closest.width/2, closest.height/2):
+                        vehicles[i].id = closest.id
+                        vehicles[i].age = closest.age + 1
                         # previous_frame_vehicles.remove(closest)
                     else:
-                        v.id = highest_id
+                        vehicles[i].id = highest_id
                         highest_id = highest_id + 1
 
                     # if v.id == highest_id:
                     #     highest_id = highest_id + 1
 
-                    if v.id is None:
-                        v.id = highest_id
+                    if vehicles[i].id is None:
+                        vehicles[i].id = highest_id
                         highest_id = highest_id + 1
 
-                    calculate_speed(v, closest)
+                    calculate_speed(vehicles[i], closest, cap)
 
                 else:
-                    v.id = highest_id
+                    vehicles[i].id = highest_id
                     highest_id = highest_id + 1
-                    v.velocity = 'N/A'
+                    vehicles[i].velocity = 'N/A'
 
-                ids.append(v.id)
+                ids.append(vehicles[i].id)
+
+    real_vehicles = []
 
     for i in indexes:
         box = bounding_boxes[i]
@@ -142,13 +125,17 @@ def find_objects(outputs, image):
         dirstr = ""
         if vehicles[i].dir == 0:
             dirstr = "Approaching"
-        else:
+        elif vehicles[i].dir == 1:
             dirstr = "Going away"
+        elif vehicles[i].dir is None:
+            dirstr = "N/A"
+
         cv2.putText(image, f'id: {vehicles[i].id}', (x, y - 10), cv2.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 255), 2)
         cv2.putText(image, f'{dirstr}', (x, y + h + 15), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 255), 2)
         cv2.putText(image, f'{vehicles[i].velocity} km/h', (x, y + h + 30), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 255), 2)
         plt.scatter(box[0] - box[2] / 2, FRAME_HEIGHT - box[1] - box[3] / 2, c ="red", marker="s")
-    previous_frame_vehicles = vehicles.copy()
+        real_vehicles.append(vehicles[i])
+    previous_frame_vehicles = real_vehicles.copy()
     vehicles.clear()
     return len(indexes)
 
@@ -167,7 +154,7 @@ while True:
 
     number_of_cars = find_objects(output, img)
 
-    cv2.putText(img, f'CURRENT NUMBER OF VEHICLES: {number_of_cars}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
+    cv2.putText(img, f'TOTAL NUMBER OF VEHICLES: {highest_id}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
     cv2.imshow(DATE_STRING, img)
