@@ -17,8 +17,6 @@ class Vehicle:
         self.age = 0
 
     def track_vehicle(self, vehicles):
-        image_width, image_height = self.img.shape[0], self.img.shape[1]
-
         for v in vehicles:
             if self.in_range(v.predicted[0], v.predicted[1], v.width, v.height):
                 self.predict_movement(prev_frame=v)
@@ -26,10 +24,9 @@ class Vehicle:
                 self.age = v.age + 1
                 return
 
-        x_threshold = image_width // 10
-        y_threshold = image_height // 5
         closest_vehicle = self.find_closest(vehicles)[0]
-        if self.in_range(closest_vehicle.pos_x, closest_vehicle.pos_y, closest_vehicle.width/2, closest_vehicle.height/2):
+        if self.in_range(closest_vehicle.pos_x, closest_vehicle.pos_y, closest_vehicle.width / 2,
+                         closest_vehicle.height / 2):
             self.id = closest_vehicle.id
             self.age = closest_vehicle.age + 1
             self.predict_movement(prev_frame=closest_vehicle)
@@ -38,9 +35,6 @@ class Vehicle:
             self.id = self.highest_id
 
     def in_range(self, pos_x, pos_y, x_threshold, y_threshold):
-        # image_width, image_height = self.img.shape[1], self.img.shape[0]
-        # x_threshold = image_width // 30
-        # y_threshold = image_height // 10
         if pos_x + x_threshold >= self.pos_x >= pos_x - x_threshold:
             if pos_y + y_threshold >= self.pos_y >= pos_y - y_threshold:
                 return True
@@ -55,12 +49,15 @@ class Vehicle:
                 smallest_distance_vehicle = v
                 smallest_distance = dist
 
-        if self.pos_y - smallest_distance_vehicle.pos_y > 0:
-            self.dir = 0
-        elif self.pos_y - smallest_distance_vehicle.pos_y < 0:
-            self.dir = 1
+        if smallest_distance_vehicle.in_range(self.pos_x, self.pos_y, self.width / 2, self.height / 2):
+            if self.pos_y + self.height/2 > smallest_distance_vehicle.pos_y + smallest_distance_vehicle.height/2:
+                self.dir = 0
+            elif self.pos_y + self.height/2 < smallest_distance_vehicle.pos_y + smallest_distance_vehicle.height/2:
+                self.dir = 1
+            else:
+                self.dir = smallest_distance_vehicle.dir
         else:
-            self.dir = smallest_distance_vehicle.dir
+            self.dir = None
         return [smallest_distance_vehicle, smallest_distance]
 
     def predict_movement(self, prev_frame):

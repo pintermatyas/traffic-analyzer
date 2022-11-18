@@ -1,8 +1,11 @@
+import time
+
 import cv2
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+from Project.labeling import label_vehicles
 from Project.statistics import calculate_speed
 from vehicle import Vehicle
 
@@ -31,7 +34,7 @@ if SAVE_VIDEO:
 ACCEPTED_CLASS_IDS = [2, 3, 5, 7]
 
 YOLO_RES = 608
-CONF_THRESHOLD = 0.5
+CONF_THRESHOLD = 0.45
 NMS_THRESHOLD = 0.3
 
 CLASS_NAMES = []
@@ -53,6 +56,9 @@ highest_id = 0
 
 MAX_DETECTION_HEIGHT = FRAME_HEIGHT//2
 
+FRAME_COUNT = 0
+start_time = time.time()
+
 
 def find_objects(outputs, image):
     global previous_frame_vehicles
@@ -65,8 +71,8 @@ def find_objects(outputs, image):
     vehicles = []
     detections = []
 
-    for output in outputs:
-        for detection in output:
+    for output_detections in outputs:
+        for detection in output_detections:
             confidence_scores = detection[5:]
             class_id = np.argmax(confidence_scores)
             confidence = confidence_scores[class_id]
@@ -86,7 +92,6 @@ def find_objects(outputs, image):
     indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, CONF_THRESHOLD, NMS_THRESHOLD)
 
     if len(indexes) > 0:
-
         for i in indexes:
             if vehicles[i].pos_y > MAX_DETECTION_HEIGHT:
                 if len(previous_frame_vehicles) > 0:
@@ -107,34 +112,20 @@ def find_objects(outputs, image):
                         highest_id = highest_id + 1
 
                     calculate_speed(vehicles[i], closest, cap)
-
                 else:
                     vehicles[i].id = highest_id
                     highest_id = highest_id + 1
                     vehicles[i].velocity = 'N/A'
-
                 ids.append(vehicles[i].id)
 
+    label_vehicles(indexes, bounding_boxes, vehicles, image)
+
     real_vehicles = []
-
     for i in indexes:
-        box = bounding_boxes[i]
-        x, y, w, h = box[0], box[1], box[2], box[3]
-
-        cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        dirstr = ""
-        if vehicles[i].dir == 0:
-            dirstr = "Approaching"
-        elif vehicles[i].dir == 1:
-            dirstr = "Going away"
-        elif vehicles[i].dir is None:
-            dirstr = "N/A"
-
-        cv2.putText(image, f'id: {vehicles[i].id}', (x, y - 10), cv2.FONT_HERSHEY_DUPLEX, 0.6, (0, 0, 255), 2)
-        cv2.putText(image, f'{dirstr}', (x, y + h + 15), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 255), 2)
-        cv2.putText(image, f'{vehicles[i].velocity} km/h', (x, y + h + 30), cv2.FONT_HERSHEY_DUPLEX, 0.5, (0, 0, 255), 2)
-        plt.scatter(box[0] - box[2] / 2, FRAME_HEIGHT - box[1] - box[3] / 2, c ="red", marker="s")
         real_vehicles.append(vehicles[i])
+        box = bounding_boxes[i]
+        plt.scatter(box[0] - box[2] / 2, FRAME_HEIGHT - box[1] - box[3] / 2, c="red", marker="s")
+
     previous_frame_vehicles = real_vehicles.copy()
     vehicles.clear()
     return len(indexes)
@@ -159,6 +150,8 @@ while True:
 
     cv2.imshow(DATE_STRING, img)
 
+    FRAME_COUNT = FRAME_COUNT + 1
+
     if SAVE_VIDEO:
         img = cv2.resize(img, (FRAME_WIDTH, FRAME_HEIGHT))
         OUT.write(img)
@@ -170,4 +163,6 @@ while True:
         plt.xlim(0, FRAME_WIDTH)
         plt.ylim(0, FRAME_HEIGHT)
         plt.show()
+        print(f'Processed frames: {FRAME_COUNT} frames under {round(time.time() - start_time, 2)} seconds '
+              f'({round(FRAME_COUNT/(time.time() - start_time), 2)}FPS)')
         break
