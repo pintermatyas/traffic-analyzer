@@ -17,19 +17,12 @@ class Vehicle:
         self.age = 0
 
     def track_vehicle(self, vehicles):
-        for v in vehicles:
-            if self.in_range(v.predicted[0], v.predicted[1], v.width, v.height):
-                self.predict_movement(prev_frame=v)
-                self.id = v.id
-                self.age = v.age + 1
-                return
 
         closest_vehicle = self.find_closest(vehicles)[0]
         if self.in_range(closest_vehicle.pos_x, closest_vehicle.pos_y, closest_vehicle.width / 2,
                          closest_vehicle.height / 2):
             self.id = closest_vehicle.id
             self.age = closest_vehicle.age + 1
-            self.predict_movement(prev_frame=closest_vehicle)
             vehicles.remove(closest_vehicle)
         else:
             self.id = self.highest_id
@@ -50,17 +43,22 @@ class Vehicle:
                 smallest_distance = dist
 
         if smallest_distance_vehicle.in_range(self.pos_x, self.pos_y, self.width / 2, self.height / 2):
+            self.dir = smallest_distance_vehicle.dir
+
+            # if self.dir is None:
             if self.pos_y + self.height/2 > smallest_distance_vehicle.pos_y + smallest_distance_vehicle.height/2:
                 self.dir = 0
             elif self.pos_y + self.height/2 < smallest_distance_vehicle.pos_y + smallest_distance_vehicle.height/2:
                 self.dir = 1
             else:
                 self.dir = smallest_distance_vehicle.dir
+
         else:
             self.dir = None
         return [smallest_distance_vehicle, smallest_distance]
 
+    # Calculates the approximate location of a vehicle in case of a missed frame
     def predict_movement(self, prev_frame):
         x_movement = self.pos_x - prev_frame.pos_x
         y_movement = self.pos_y - prev_frame.pos_y
-        self.predicted = [self.pos_x + x_movement, self.pos_y + y_movement]
+        self.predicted = [self.pos_x + 2 * x_movement, self.pos_y + 2 * y_movement]

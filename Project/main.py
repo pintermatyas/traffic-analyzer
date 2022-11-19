@@ -11,12 +11,12 @@ from vehicle import Vehicle
 
 # If you don't want to save the output video every time you run the script, set it to False
 # Else set it to True
-SAVE_VIDEO = False
+SAVE_VIDEO = True
 
 now = datetime.now()
 DATE_STRING = now.strftime("%Y-%m-%d-%H-%M-%S")
 
-INPUT_FILE_NAME = 'sample.mp4'
+INPUT_FILE_NAME = 'sample3.mp4'
 INPUT_FILE_PATH = 'input/' + INPUT_FILE_NAME
 OUTPUT_FILE_NAME = DATE_STRING + '.mp4'
 OUTPUT_FILE_PATH = 'output/' + OUTPUT_FILE_NAME
@@ -34,8 +34,8 @@ if SAVE_VIDEO:
 ACCEPTED_CLASS_IDS = [2, 3, 5, 7]
 
 YOLO_RES = 608
-CONF_THRESHOLD = 0.45
-NMS_THRESHOLD = 0.3
+CONF_THRESHOLD = 0.35
+NMS_THRESHOLD = 0.4
 
 CLASS_NAMES = []
 
@@ -80,14 +80,15 @@ def find_objects(outputs, image):
                 if confidence > CONF_THRESHOLD:
                     w, h = int(detection[2] * wt), int(detection[3] * ht)
                     x, y = int((detection[0] * wt) - w / 2), int((detection[1] * ht) - h / 2)
-                    if y > MAX_DETECTION_HEIGHT:
-                        if h > ht / 25:
-                            if h < ht/5:
-                                bounding_boxes.append([x, y, w, h])
-                                vehicles.append(Vehicle(class_id, x, y, w, h, image, highest_id))
-                                class_ids.append(class_id)
-                                confs.append(float(confidence))
-                                detections.append([[x, y, w, h], confidence, class_id])
+                    if 8.5*FRAME_HEIGHT/10 > y > MAX_DETECTION_HEIGHT:
+                        if 0.07*FRAME_WIDTH < x+w/2 < 0.93*FRAME_WIDTH:
+                            if h > ht / 25:
+                                if h < ht/5:
+                                    bounding_boxes.append([x, y, w, h])
+                                    vehicles.append(Vehicle(class_id, x, y, w, h, image, highest_id))
+                                    class_ids.append(class_id)
+                                    confs.append(float(confidence))
+                                    detections.append([[x, y, w, h], confidence, class_id])
 
     indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, CONF_THRESHOLD, NMS_THRESHOLD)
 
@@ -99,13 +100,10 @@ def find_objects(outputs, image):
                     if vehicles[i].in_range(closest.pos_x, closest.pos_y, closest.width/2, closest.height/2):
                         vehicles[i].id = closest.id
                         vehicles[i].age = closest.age + 1
-                        # previous_frame_vehicles.remove(closest)
+                        previous_frame_vehicles.remove(closest)
                     else:
                         vehicles[i].id = highest_id
                         highest_id = highest_id + 1
-
-                    # if v.id == highest_id:
-                    #     highest_id = highest_id + 1
 
                     if vehicles[i].id is None:
                         vehicles[i].id = highest_id
@@ -124,7 +122,16 @@ def find_objects(outputs, image):
     for i in indexes:
         real_vehicles.append(vehicles[i])
         box = bounding_boxes[i]
-        plt.scatter(box[0] - box[2] / 2, FRAME_HEIGHT - box[1] - box[3] / 2, c="red", marker="s")
+        y_offset = 0.5
+        if vehicles[i].dir == 0:
+            color_str = "green"
+        elif vehicles[i].dir == 1:
+            color_str = "blue"
+        else:
+            color_str = "red"
+        if vehicles[i].class_id in class_ids[2:]:
+            y_offset = 0.75
+        plt.scatter(box[0] + box[2] / 2, FRAME_HEIGHT - box[1] - box[3] * y_offset, c=color_str, marker="s")
 
     previous_frame_vehicles = real_vehicles.copy()
     vehicles.clear()
@@ -133,7 +140,6 @@ def find_objects(outputs, image):
 
 while True:
     success, img = cap.read()
-
     blob = cv2.dnn.blobFromImage(img, 1 / 255, (YOLO_RES, YOLO_RES), [0, 0, 0], crop=False)
     net.setInput(blob)
 
@@ -161,7 +167,7 @@ while True:
             OUT.release()
         cv2.destroyAllWindows()
         plt.xlim(0, FRAME_WIDTH)
-        plt.ylim(0, FRAME_HEIGHT)
+        # plt.ylim(0, FRAME_HEIGHT)
         plt.show()
         print(f'Processed frames: {FRAME_COUNT} frames under {round(time.time() - start_time, 2)} seconds '
               f'({round(FRAME_COUNT/(time.time() - start_time), 2)}FPS)')

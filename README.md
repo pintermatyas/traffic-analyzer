@@ -15,7 +15,7 @@ Tracking és sebességmeghatározás után:
 
 Le lett korlátozva a felismeréshez használható rész az alsó felére a képnek, hogy ne legyen olyan sok fals pozitív felismerés, amit egy frame után el is veszít. Az autók irányát színkódoltam: a felénk haladó zöld, az elfele haladó kék téglalapot kap.
 
-Heatmap az elhaladó autókról, a sample2 file-on futtatva:
+Heatmap az elhaladó autókról, a sample3 file-on futtatva:
 
 ![Output](md_files/sample2_detections.png)
 
