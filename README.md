@@ -20,6 +20,6 @@ Heatmap az elhaladó autókról, a sample3 file-on futtatva:
 ![Output](md_files/sample2_detections.png)
 
 ## _TODO_
-- GPU-ra kiszervezés, mert CPU-n lassú
-- Úgy tűnik, hogy 
-  - Egy ID-t több autónak is kiad &rarr; Ennek javítása
+- GPU-ra kiszervezés, mert CPU-n lassú &rarr; próbáltam, nem tudom manuálisan buildelni hozzá az opencv-t 
+- Sebesség meghatározása pontatlan &rarr; képlet mi?
+- Egy-egy kihagyott framenél az autók id-je teljesen elvesznek, utána teljesen újat kapnak &rarr; javítani
