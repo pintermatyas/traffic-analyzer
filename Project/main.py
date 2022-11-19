@@ -5,13 +5,13 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-from Project.labeling import label_vehicles
-from Project.statistics import calculate_speed
+from labeling import label_vehicles
+from statistics import calculate_speed
 from vehicle import Vehicle
 
 # If you don't want to save the output video every time you run the script, set it to False
 # Else set it to True
-SAVE_VIDEO = True
+SAVE_VIDEO = False
 
 now = datetime.now()
 DATE_STRING = now.strftime("%Y-%m-%d-%H-%M-%S")
