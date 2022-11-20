@@ -11,7 +11,7 @@ from vehicle import Vehicle
 
 # If you don't want to save the output video every time you run the script, set it to False
 # Else set it to True
-SAVE_VIDEO = False
+SAVE_VIDEO = True
 
 now = datetime.now()
 DATE_STRING = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -26,6 +26,8 @@ CLASSES_FILE_PATH = 'configfiles/coco.names'
 cap = cv2.VideoCapture(INPUT_FILE_PATH)
 FRAME_HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 FRAME_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+MAX_DETECTION_HEIGHT = FRAME_HEIGHT//2
+
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 if SAVE_VIDEO:
     OUT = cv2.VideoWriter(OUTPUT_FILE_PATH, fourcc, 30, (FRAME_WIDTH, FRAME_HEIGHT))
@@ -54,7 +56,6 @@ net.setPreferableTarget(cv2.dnn.DNN_TARGET_OPENCL)
 previous_frame_vehicles = []
 highest_id = 0
 
-MAX_DETECTION_HEIGHT = FRAME_HEIGHT//2
 
 FRAME_COUNT = 0
 start_time = time.time()
@@ -99,7 +100,10 @@ def find_objects(outputs, image):
                     closest = vehicles[i].find_closest(previous_frame_vehicles)[0]
                     if vehicles[i].in_range(closest.pos_x, closest.pos_y, closest.width/2, closest.height/2):
                         vehicles[i].id = closest.id
+                        if closest.age == 0:
+                            closest.first_pos = [closest.pos_x, closest.pos_y, closest.width, closest.height]
                         vehicles[i].age = closest.age + 1
+                        vehicles[i].first_pos = closest.first_pos
                         previous_frame_vehicles.remove(closest)
                     else:
                         vehicles[i].id = highest_id

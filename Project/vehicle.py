@@ -15,8 +15,12 @@ class Vehicle:
         self.velocity = 0
         self.predicted = [None, None]
         self.age = 0
+        self.first_pos = [None, None, None, None]
 
     def track_vehicle(self, vehicles):
+
+        if self.age == 0:
+            self.first_pos = [self.pos_x, self.pos_y, self.width, self.height]
 
         closest_vehicle = self.find_closest(vehicles)[0]
         if self.in_range(closest_vehicle.pos_x, closest_vehicle.pos_y, closest_vehicle.width / 2,
@@ -44,15 +48,17 @@ class Vehicle:
 
         if smallest_distance_vehicle.in_range(self.pos_x, self.pos_y, self.width / 2, self.height / 2):
             self.dir = smallest_distance_vehicle.dir
+            self.age = smallest_distance_vehicle.age + 1
+            # self.first_pos = smallest_distance_vehicle.first_pos
 
             # if self.dir is None:
-            if self.pos_y + self.height/2 > smallest_distance_vehicle.pos_y + smallest_distance_vehicle.height/2:
-                self.dir = 0
-            elif self.pos_y + self.height/2 < smallest_distance_vehicle.pos_y + smallest_distance_vehicle.height/2:
-                self.dir = 1
-            else:
-                self.dir = smallest_distance_vehicle.dir
-
+            if smallest_distance_vehicle.first_pos != [None, None, None, None]:
+                if self.pos_y + self.height/2 > smallest_distance_vehicle.first_pos[1] + smallest_distance_vehicle.first_pos[3]/2:
+                    self.dir = 0
+                elif self.pos_y + self.height/2 < smallest_distance_vehicle.first_pos[1] + smallest_distance_vehicle.first_pos[3]/2:
+                    self.dir = 1
+                else:
+                    self.dir = smallest_distance_vehicle.dir
         else:
             self.dir = None
         return [smallest_distance_vehicle, smallest_distance]
