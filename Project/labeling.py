@@ -1,11 +1,10 @@
 import cv2
 
 
-def label_vehicles(indexes, bounding_boxes, vehicles, image):
+def label_vehicles(indexes, vehicles, image):
     for i in indexes:
-        box = bounding_boxes[i]
-        vehicle = vehicles[i]
-        x, y, w, h = box[0], box[1], box[2], box[3]
+        vehicle = vehicles[int(i)]
+        x, y, w, h = vehicle.pos_x, vehicle.pos_y, vehicle.width, vehicle.height
         if vehicle.dir == 0:
             # dir_string = "Approaching"
             color = (0, 255, 0)

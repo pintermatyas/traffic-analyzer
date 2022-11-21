@@ -11,7 +11,7 @@ from vehicle import Vehicle
 
 # If you don't want to save the output video every time you run the script, set it to False
 # Else set it to True
-SAVE_VIDEO = True
+SAVE_VIDEO = False
 
 now = datetime.now()
 DATE_STRING = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -20,13 +20,13 @@ INPUT_FILE_NAME = 'sample3.mp4'
 INPUT_FILE_PATH = 'input/' + INPUT_FILE_NAME
 OUTPUT_FILE_NAME = DATE_STRING + '.mp4'
 OUTPUT_FILE_PATH = 'output/' + OUTPUT_FILE_NAME
-MODEL_FILE_PATH = 'C:/Egyetem/5.felev/Temalab/yolov3-608.weights'
+MODEL_FILE_PATH = 'C:/Egyetem/5.felev/Temalab/yolov4-csp.weights'
 CLASSES_FILE_PATH = 'configfiles/coco.names'
 
 cap = cv2.VideoCapture(INPUT_FILE_PATH)
 FRAME_HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 FRAME_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-MAX_DETECTION_HEIGHT = FRAME_HEIGHT//2
+MAX_DETECTION_HEIGHT = FRAME_HEIGHT // 2
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 if SAVE_VIDEO:
@@ -36,7 +36,7 @@ if SAVE_VIDEO:
 ACCEPTED_CLASS_IDS = [2, 3, 5, 7]
 
 YOLO_RES = 608
-CONF_THRESHOLD = 0.35
+CONF_THRESHOLD = 0.1
 NMS_THRESHOLD = 0.4
 
 CLASS_NAMES = []
@@ -44,7 +44,7 @@ CLASS_NAMES = []
 with open(CLASSES_FILE_PATH, 'rt') as f:
     CLASS_NAMES = f.read().rstrip('\n').split('\n')
 
-MODEL_CONFIGURATION = 'configfiles/yolov3.cfg'
+MODEL_CONFIGURATION = 'configfiles/yolov4-csp.cfg'
 MODEL_WEIGHTS = MODEL_FILE_PATH
 
 net = cv2.dnn.readNetFromDarknet(MODEL_CONFIGURATION, MODEL_WEIGHTS)
@@ -55,7 +55,6 @@ net.setPreferableTarget(cv2.dnn.DNN_TARGET_OPENCL)
 
 previous_frame_vehicles = []
 highest_id = 0
-
 
 FRAME_COUNT = 0
 start_time = time.time()
@@ -81,10 +80,10 @@ def find_objects(outputs, image):
                 if confidence > CONF_THRESHOLD:
                     w, h = int(detection[2] * wt), int(detection[3] * ht)
                     x, y = int((detection[0] * wt) - w / 2), int((detection[1] * ht) - h / 2)
-                    if 8.5*FRAME_HEIGHT/10 > y > MAX_DETECTION_HEIGHT:
-                        if 0.07*FRAME_WIDTH < x+w/2 < 0.93*FRAME_WIDTH:
+                    if 8.5 * FRAME_HEIGHT / 10 > y > MAX_DETECTION_HEIGHT:
+                        if 0.07 * FRAME_WIDTH < x + w / 2 < 0.93 * FRAME_WIDTH:
                             if h > ht / 25:
-                                if h < ht/5:
+                                if h < ht / 5:
                                     bounding_boxes.append([x, y, w, h])
                                     vehicles.append(Vehicle(class_id, x, y, w, h, image, highest_id))
                                     class_ids.append(class_id)
@@ -98,7 +97,7 @@ def find_objects(outputs, image):
             if vehicles[i].pos_y > MAX_DETECTION_HEIGHT:
                 if len(previous_frame_vehicles) > 0:
                     closest = vehicles[i].find_closest(previous_frame_vehicles)[0]
-                    if vehicles[i].in_range(closest.pos_x, closest.pos_y, closest.width/2, closest.height/2):
+                    if vehicles[i].in_range(closest):
                         vehicles[i].id = closest.id
                         if closest.age == 0:
                             closest.first_pos = [closest.pos_x, closest.pos_y, closest.width, closest.height]
@@ -114,13 +113,27 @@ def find_objects(outputs, image):
                         highest_id = highest_id + 1
 
                     calculate_speed(vehicles[i], closest, cap)
+                    vehicles[i].predict_movement(closest)
                 else:
                     vehicles[i].id = highest_id
                     highest_id = highest_id + 1
                     vehicles[i].velocity = 'N/A'
+
                 ids.append(vehicles[i].id)
 
-    label_vehicles(indexes, bounding_boxes, vehicles, image)
+    for prev in previous_frame_vehicles:
+        if prev.id not in ids:
+            if prev.idle_age < 2:
+                prev.idle_age += 1
+                prev.pos_x = prev.predicted_direction[0]
+                prev.pos_y = prev.predicted_direction[1]
+                ids.append(prev.id)
+                vehicles.append(prev)
+                x,y,w,h = prev.pos_x, prev.pos_y, prev.width, prev.height
+                bounding_boxes.append([x, y, w, h])
+                indexes = np.append(indexes, len(bounding_boxes)-1)
+
+    label_vehicles(indexes, vehicles, image)
 
     real_vehicles = []
     for i in indexes:
@@ -174,5 +187,5 @@ while True:
         # plt.ylim(0, FRAME_HEIGHT)
         plt.show()
         print(f'Processed frames: {FRAME_COUNT} frames under {round(time.time() - start_time, 2)} seconds '
-              f'({round(FRAME_COUNT/(time.time() - start_time), 2)}FPS)')
+              f'({round(FRAME_COUNT / (time.time() - start_time), 2)}FPS)')
         break
