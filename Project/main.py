@@ -5,13 +5,14 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+from lane_detection import lanes_detection
 from labeling import label_vehicles
 from statistics import calculate_speed
 from vehicle import Vehicle
 
 # If you don't want to save the output video every time you run the script, set it to False
 # Else set it to True
-SAVE_VIDEO = False
+SAVE_VIDEO = True
 
 now = datetime.now()
 DATE_STRING = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -58,6 +59,9 @@ highest_id = 0
 
 FRAME_COUNT = 0
 start_time = time.time()
+
+imgPlot = 0
+init = True
 
 
 def find_objects(outputs, image):
@@ -129,14 +133,15 @@ def find_objects(outputs, image):
                 prev.pos_y = prev.predicted_direction[1]
                 ids.append(prev.id)
                 vehicles.append(prev)
-                x,y,w,h = prev.pos_x, prev.pos_y, prev.width, prev.height
+                x, y, w, h = prev.pos_x, prev.pos_y, prev.width, prev.height
                 bounding_boxes.append([x, y, w, h])
-                indexes = np.append(indexes, len(bounding_boxes)-1)
+                indexes = np.append(indexes, len(bounding_boxes) - 1)
 
-    label_vehicles(indexes, vehicles, image)
+    label_vehicles(indexes, vehicles, image, imgPlot)
 
     real_vehicles = []
     for i in indexes:
+        i = int(i)
         real_vehicles.append(vehicles[i])
         box = bounding_boxes[i]
         y_offset = 0.5
@@ -157,6 +162,11 @@ def find_objects(outputs, image):
 
 while True:
     success, img = cap.read()
+
+    imgPlot = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+    imgPlot = lanes_detection(img, imgPlot)
+    img = cv2.addWeighted(img, 1.0, imgPlot, 0.6, 0)
+
     blob = cv2.dnn.blobFromImage(img, 1 / 255, (YOLO_RES, YOLO_RES), [0, 0, 0], crop=False)
     net.setInput(blob)
 
@@ -171,10 +181,15 @@ while True:
     cv2.putText(img, f'TOTAL NUMBER OF VEHICLES: {highest_id}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
+    # Test filters
+    # img = cv2.GaussianBlur(img, (17, 17), 0)
+    # img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    # img = cv2.Sobel(src=img, ddepth=cv2.CV_8UC1, dx=1, dy=1, ksize=1)
+    # img = cv2.Canny(img, 50, 130, apertureSize=3)
+
     cv2.imshow(DATE_STRING, img)
 
     FRAME_COUNT = FRAME_COUNT + 1
-
     if SAVE_VIDEO:
         img = cv2.resize(img, (FRAME_WIDTH, FRAME_HEIGHT))
         OUT.write(img)
