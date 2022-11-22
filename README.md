@@ -34,8 +34,13 @@ Ez kijavítva: a legelső pozíciójához méri az irányt, nem az előzőhöz:
 
 Itt már nincsenek az ábrán random zöld pontok a kék pontok között, ki lett javítva a hiba
 
+A következő feladat a sávok, de minimum az úttest felismerése:
+
+![Output](md_files/lane-detection-alpha_model.gif)
+
+Ez az alfa modell, lesz továbbfejlesztve
+
 
 ## _TODO_
 - GPU-ra kiszervezés, mert CPU-n lassú &rarr; próbáltam, nem tudom manuálisan buildelni hozzá az opencv-t 
 - Sebesség meghatározása pontatlan &rarr; képlet mi?
-- Egy-egy kihagyott framenél az autók id-je teljesen elvesznek, utána teljesen újat kapnak &rarr; javítani
