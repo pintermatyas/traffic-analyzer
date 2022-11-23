@@ -42,7 +42,7 @@ def lanes_detection(input_image, output_image):
 
     image_with_lines = draw_lines(output_image, bounding_lines)
 
-    return image_with_lines, lines
+    return image_with_lines, bounding_lines
 
 
 def get_bounding_lines(lines, output_image):

@@ -15,7 +15,7 @@ SAVE_VIDEO = False
 SHOW_PLOTS = False
 VIEW_MASKED = False
 YOLO_VERSION = 4
-INPUT_FILE_NAME = 'sample3.mp4'
+INPUT_FILE_NAME = 'sample2.mp4'
 CLASSES_FILE_PATH = 'configfiles/coco.names'
 # car, motorbike, bus, truck
 ACCEPTED_CLASS_IDS = [2, 3, 5, 7]
@@ -68,7 +68,7 @@ start_time = time.time()
 init = True
 
 
-def find_objects(outputs, image):
+def find_objects(outputs, image, lines):
     global previous_frame_vehicles
     global highest_id
     ht, wt, cT = image.shape
@@ -119,8 +119,10 @@ def find_objects(outputs, image):
                     if vehicles[i].id is None:
                         vehicles[i].id = highest_id
                         highest_id = highest_id + 1
-
-                    calculate_speed(vehicles[i], closest, cap)
+                    if np.mod(FRAME_COUNT, int(cap.get(cv2.CAP_PROP_FPS))/5) == 0:
+                        calculate_speed(vehicles[i], closest, cap, lines)
+                    else:
+                        vehicles[i].velocity = closest.velocity
                     vehicles[i].predict_movement(closest)
                 else:
                     vehicles[i].id = highest_id
@@ -185,14 +187,14 @@ while True:
 
     output = net.forward(output_names)
 
-    number_of_cars, vehicles = find_objects(output, img)
+    imgPlot = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+    imgPlot, lines = lanes_detection(img, imgPlot)
+    number_of_cars, vehicles = find_objects(output, img, lines)
 
-    if not VIEW_MASKED:
-        cv2.putText(img, f'TOTAL NUMBER OF VEHICLES: {highest_id - 1}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-        imgPlot = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-        imgPlot = lanes_detection(img, imgPlot)[0]
-        img = cv2.addWeighted(img, 1.0, imgPlot, 0.6, 0)
+    # if not VIEW_MASKED:
+    cv2.putText(img, f'TOTAL NUMBER OF VEHICLES: {highest_id - 1}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    img = cv2.addWeighted(img, 1.0, imgPlot, 0.6, 0)
 
     # Test filters
     if VIEW_MASKED:
