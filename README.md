@@ -38,7 +38,7 @@ A következő feladat a sávok, de minimum az úttest felismerése:
 
 ![Output](md_files/lane-detection-alpha_model.gif)
 
-Ez az alfa modell, lesz továbbfejlesztve:
+Továbbfejlesztve:
 
 ![Output](md_files/lane-detection-beta_model.gif)
 
