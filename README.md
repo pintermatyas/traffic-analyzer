@@ -43,4 +43,4 @@ Ez az alfa modell, lesz továbbfejlesztve
 
 ## _TODO_
 - GPU-ra kiszervezés, mert CPU-n lassú &rarr; próbáltam, nem tudom manuálisan buildelni hozzá az opencv-t 
-- Sebesség meghatározása pontatlan &rarr; képlet mi?
+- Sebesség meghatározása pontatlan &rarr; Ötlet megvan, stabil lane detection kell hozzá!
