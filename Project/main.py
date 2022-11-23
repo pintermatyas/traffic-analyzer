@@ -21,7 +21,7 @@ CLASSES_FILE_PATH = 'configfiles/coco.names'
 ACCEPTED_CLASS_IDS = [2, 3, 5, 7]
 YOLO_RES = 608
 CONFIDENCE_THRESHOLD = 0.3
-NON_MAX_SUPRESSION_THRESHOLD = 0.4
+NON_MAX_SUPPRESSION_THRESHOLD = 0.4
 
 if YOLO_VERSION == 4:
     MODEL_FILE_PATH = 'C:/Egyetem/5.felev/Temalab/yolov4-csp.weights'
@@ -58,7 +58,7 @@ net = cv2.dnn.readNetFromDarknet(MODEL_CONFIGURATION, MODEL_WEIGHTS)
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_OPENCL)
 
-# previous_frame_vehicles = []
+previous_frame_vehicles = []
 highest_id = 1
 
 FRAME_COUNT = 0
@@ -98,7 +98,7 @@ def find_objects(outputs, image):
                                     confs.append(float(confidence))
                                     detections.append([[x, y, w, h], confidence, class_id])
 
-    indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, CONFIDENCE_THRESHOLD, NON_MAX_SUPRESSION_THRESHOLD)
+    indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, CONFIDENCE_THRESHOLD, NON_MAX_SUPPRESSION_THRESHOLD)
 
     if len(indexes) > 0:
         for i in indexes:
