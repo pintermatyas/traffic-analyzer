@@ -10,19 +10,34 @@ from labeling import label_vehicles
 from statistics import calculate_speed
 from vehicle import Vehicle
 
-# If you don't want to save the output video every time you run the script, set it to False
-# Else set it to True
-SAVE_VIDEO = True
+# INIT values
+SAVE_VIDEO = False
+SHOW_PLOTS = False
+VIEW_MASKED = False
+YOLO_VERSION = 4
+INPUT_FILE_NAME = 'sample3.mp4'
+CLASSES_FILE_PATH = 'configfiles/coco.names'
+# car, motorbike, bus, truck
+ACCEPTED_CLASS_IDS = [2, 3, 5, 7]
+YOLO_RES = 608
+CONFIDENCE_THRESHOLD = 0.3
+NON_MAX_SUPRESSION_THRESHOLD = 0.4
+
+if YOLO_VERSION == 4:
+    MODEL_FILE_PATH = 'C:/Egyetem/5.felev/Temalab/yolov4-csp.weights'
+    MODEL_CONFIGURATION = 'configfiles/yolov4-csp.cfg'
+elif YOLO_VERSION == 3:
+    MODEL_FILE_PATH = 'C:/Egyetem/5.felev/Temalab/yolov3-608.weights'
+    MODEL_CONFIGURATION = 'configfiles/yolov3.cfg'
+MODEL_WEIGHTS = MODEL_FILE_PATH
 
 now = datetime.now()
 DATE_STRING = now.strftime("%Y-%m-%d-%H-%M-%S")
 
-INPUT_FILE_NAME = 'sample3.mp4'
+
 INPUT_FILE_PATH = 'input/' + INPUT_FILE_NAME
 OUTPUT_FILE_NAME = DATE_STRING + '.mp4'
 OUTPUT_FILE_PATH = 'output/' + OUTPUT_FILE_NAME
-MODEL_FILE_PATH = 'C:/Egyetem/5.felev/Temalab/yolov4-csp.weights'
-CLASSES_FILE_PATH = 'configfiles/coco.names'
 
 cap = cv2.VideoCapture(INPUT_FILE_PATH)
 FRAME_HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -33,34 +48,23 @@ fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 if SAVE_VIDEO:
     OUT = cv2.VideoWriter(OUTPUT_FILE_PATH, fourcc, 30, (FRAME_WIDTH, FRAME_HEIGHT))
 
-# car, motorbike, bus, truck
-ACCEPTED_CLASS_IDS = [2, 3, 5, 7]
-
-YOLO_RES = 608
-CONF_THRESHOLD = 0.1
-NMS_THRESHOLD = 0.4
 
 CLASS_NAMES = []
 
 with open(CLASSES_FILE_PATH, 'rt') as f:
     CLASS_NAMES = f.read().rstrip('\n').split('\n')
 
-MODEL_CONFIGURATION = 'configfiles/yolov4-csp.cfg'
-MODEL_WEIGHTS = MODEL_FILE_PATH
-
 net = cv2.dnn.readNetFromDarknet(MODEL_CONFIGURATION, MODEL_WEIGHTS)
-
 net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-
 net.setPreferableTarget(cv2.dnn.DNN_TARGET_OPENCL)
 
-previous_frame_vehicles = []
-highest_id = 0
+# previous_frame_vehicles = []
+highest_id = 1
 
 FRAME_COUNT = 0
 start_time = time.time()
 
-imgPlot = 0
+# imgPlot = 0
 init = True
 
 
@@ -81,7 +85,7 @@ def find_objects(outputs, image):
             class_id = np.argmax(confidence_scores)
             confidence = confidence_scores[class_id]
             if class_id in ACCEPTED_CLASS_IDS:
-                if confidence > CONF_THRESHOLD:
+                if confidence > CONFIDENCE_THRESHOLD:
                     w, h = int(detection[2] * wt), int(detection[3] * ht)
                     x, y = int((detection[0] * wt) - w / 2), int((detection[1] * ht) - h / 2)
                     if 8.5 * FRAME_HEIGHT / 10 > y > MAX_DETECTION_HEIGHT:
@@ -94,7 +98,7 @@ def find_objects(outputs, image):
                                     confs.append(float(confidence))
                                     detections.append([[x, y, w, h], confidence, class_id])
 
-    indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, CONF_THRESHOLD, NMS_THRESHOLD)
+    indexes = cv2.dnn.NMSBoxes(bounding_boxes, confs, CONFIDENCE_THRESHOLD, NON_MAX_SUPRESSION_THRESHOLD)
 
     if len(indexes) > 0:
         for i in indexes:
@@ -137,7 +141,8 @@ def find_objects(outputs, image):
                 bounding_boxes.append([x, y, w, h])
                 indexes = np.append(indexes, len(bounding_boxes) - 1)
 
-    label_vehicles(indexes, vehicles, image, imgPlot)
+    if not VIEW_MASKED:
+        label_vehicles(indexes, vehicles, image)
 
     real_vehicles = []
     for i in indexes:
@@ -157,15 +162,19 @@ def find_objects(outputs, image):
 
     previous_frame_vehicles = real_vehicles.copy()
     vehicles.clear()
-    return len(indexes)
+    return len(indexes), real_vehicles
 
+
+init = True
 
 while True:
     success, img = cap.read()
 
-    imgPlot = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
-    imgPlot = lanes_detection(img, imgPlot)
-    img = cv2.addWeighted(img, 1.0, imgPlot, 0.6, 0)
+    if img is None and init is True:
+        print("Enter a valid path to video!")
+        break
+
+    init = False
 
     blob = cv2.dnn.blobFromImage(img, 1 / 255, (YOLO_RES, YOLO_RES), [0, 0, 0], crop=False)
     net.setInput(blob)
@@ -176,16 +185,20 @@ while True:
 
     output = net.forward(output_names)
 
-    number_of_cars = find_objects(output, img)
+    number_of_cars, vehicles = find_objects(output, img)
 
-    cv2.putText(img, f'TOTAL NUMBER OF VEHICLES: {highest_id}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+    if not VIEW_MASKED:
+        cv2.putText(img, f'TOTAL NUMBER OF VEHICLES: {highest_id - 1}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        imgPlot = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
+        imgPlot = lanes_detection(img, imgPlot)[0]
+        img = cv2.addWeighted(img, 1.0, imgPlot, 0.6, 0)
 
     # Test filters
-    # img = cv2.GaussianBlur(img, (17, 17), 0)
-    # img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    # img = cv2.Sobel(src=img, ddepth=cv2.CV_8UC1, dx=1, dy=1, ksize=1)
-    # img = cv2.Canny(img, 50, 130, apertureSize=3)
+    if VIEW_MASKED:
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        img = cv2.Sobel(src=img, ddepth=cv2.CV_8UC1, dx=1, dy=1, ksize=1)
+        img = cv2.Canny(img, 50, 130, apertureSize=3)
 
     cv2.imshow(DATE_STRING, img)
 
@@ -198,9 +211,9 @@ while True:
         if SAVE_VIDEO:
             OUT.release()
         cv2.destroyAllWindows()
-        plt.xlim(0, FRAME_WIDTH)
-        # plt.ylim(0, FRAME_HEIGHT)
-        plt.show()
+        if SHOW_PLOTS:
+            plt.xlim(0, FRAME_WIDTH)
+            plt.show()
         print(f'Processed frames: {FRAME_COUNT} frames under {round(time.time() - start_time, 2)} seconds '
               f'({round(FRAME_COUNT / (time.time() - start_time), 2)}FPS)')
         break

@@ -44,6 +44,10 @@ Ez az alfa modell, lesz továbbfejlesztve:
 
 A nem releváns részeket levágtam róla, így igényesebben is néz ki.
 
+![Output](md_files/lane-detection-3_0_model.gif)
+
+Az egymásba csúszó vagy egymáshoz nagyon közel lévő vonalakat kiszűrtem és csak a leghosszabbat hagytam meg.
+
 
 ## _TODO_
 - GPU-ra kiszervezés, mert CPU-n lassú &rarr; próbáltam, nem tudom manuálisan buildelni hozzá az opencv-t 
