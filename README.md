@@ -48,6 +48,10 @@ A nem releváns részeket levágtam róla, így igényesebben is néz ki.
 
 Az egymásba csúszó vagy egymáshoz nagyon közel lévő vonalakat kiszűrtem és csak a leghosszabbat hagytam meg.
 
+Ezután ismét a sebesség meghatározására mentem rá, sikerült egy jobb verziót összehozni:
+
+![Output](md_files/speed-determination.gif)
+
 
 ## _TODO_
 - GPU-ra kiszervezés, mert CPU-n lassú &rarr; próbáltam, nem tudom manuálisan buildelni hozzá az opencv-t 
