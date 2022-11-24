@@ -15,7 +15,7 @@ SAVE_VIDEO = False
 SHOW_PLOTS = False
 VIEW_MASKED = False
 YOLO_VERSION = 4
-INPUT_FILE_NAME = 'sample2.mp4'
+INPUT_FILE_NAME = 'sample3.mp4'
 CLASSES_FILE_PATH = 'configfiles/coco.names'
 # car, motorbike, bus, truck
 ACCEPTED_CLASS_IDS = [2, 3, 5, 7]
