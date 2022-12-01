@@ -11,7 +11,7 @@ from statistics import calculate_speed
 from vehicle import Vehicle
 
 # INIT values
-SAVE_VIDEO = False
+SAVE_VIDEO = True
 SHOW_PLOTS = False
 VIEW_MASKED = False
 YOLO_VERSION = 4
@@ -64,7 +64,6 @@ highest_id = 1
 FRAME_COUNT = 0
 start_time = time.time()
 
-# imgPlot = 0
 init = True
 
 
@@ -114,10 +113,12 @@ def find_objects(outputs, image, lines):
                         previous_frame_vehicles.remove(closest)
                     else:
                         vehicles[i].id = highest_id
+                        vehicles[i].first_pos = [vehicles[i].pos_x, vehicles[i].pos_y, vehicles[i].width, vehicles[i].height]
                         highest_id = highest_id + 1
 
                     if vehicles[i].id is None:
                         vehicles[i].id = highest_id
+                        vehicles[i].first_pos = [vehicles[i].pos_x, vehicles[i].pos_y, vehicles[i].width, vehicles[i].height]
                         highest_id = highest_id + 1
                     if np.mod(FRAME_COUNT, int(cap.get(cv2.CAP_PROP_FPS))/5) == 0:
                         calculate_speed(vehicles[i], closest, cap, lines)

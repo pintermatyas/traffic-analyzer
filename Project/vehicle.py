@@ -18,19 +18,6 @@ class Vehicle:
         self.idle_age = 0
         self.first_pos = [None, None, None, None]
 
-    def track_vehicle(self, vehicles):
-
-        if self.age == 0:
-            self.first_pos = [self.pos_x, self.pos_y, self.width, self.height]
-
-        closest_vehicle = self.find_closest(vehicles)[0]
-        if self.in_range(closest_vehicle):
-            self.id = closest_vehicle.id
-            self.age = closest_vehicle.age + 1
-            vehicles.remove(closest_vehicle)
-        else:
-            self.id = self.highest_id
-
     def in_range(self, vehicle):
         pos_x, pos_y = vehicle.pos_x, vehicle.pos_y
         x_threshold, y_threshold = 3 * vehicle.width / 4, 3 * vehicle.height / 4
@@ -51,7 +38,7 @@ class Vehicle:
         if self.in_range(smallest_distance_vehicle):
             self.dir = smallest_distance_vehicle.dir
             self.age = smallest_distance_vehicle.age + 1
-            # self.first_pos = smallest_distance_vehicle.first_pos
+            self.first_pos = smallest_distance_vehicle.first_pos
 
             # if self.dir is None:
             if smallest_distance_vehicle.first_pos != [None, None, None, None]:

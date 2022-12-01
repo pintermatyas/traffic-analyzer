@@ -15,11 +15,13 @@ def calculate_speed(current_vehicle, previous_frame_vehicle, cap, lines):
     convert_to_kph = 3.6
     current_x, current_y = current_vehicle.pos_x, current_vehicle.pos_y
     current_width_in_pixels, current_height = current_vehicle.width, current_vehicle.height
-    prev_frame_x, prev_frame_y = previous_frame_vehicle.pos_x, previous_frame_vehicle.pos_y
-    prev_frame_width, prev_frame_height = previous_frame_vehicle.width, previous_frame_vehicle.height
+    # prev_frame_x, prev_frame_y = previous_frame_vehicle.pos_x, previous_frame_vehicle.pos_y
+    # prev_frame_width, prev_frame_height = previous_frame_vehicle.width, previous_frame_vehicle.height
+    first_frame_x, first_frame_y, first_frame_width, first_frame_height = current_vehicle.first_pos
+    # prev_frame_width, prev_frame_height = previous_frame_vehicle.width, previous_frame_vehicle.height
 
     if current_y + current_height < 3 * FRAME_HEIGHT // 4:
-        angle_offset = 3.2 + 2 * (1-(current_y - 3*FRAME_HEIGHT//4)/(3*FRAME_HEIGHT//4))
+        angle_offset = 3.2 + 1.2*(1-(current_y - 3*FRAME_HEIGHT//4)/(3*FRAME_HEIGHT//4))
     else:
         angle_offset = 3.2
 
@@ -35,25 +37,33 @@ def calculate_speed(current_vehicle, previous_frame_vehicle, cap, lines):
     road_width_in_pixels = abs(closest_intersection_points[0][0] - closest_intersection_points[1][0])
 
     number_of_lanes = get_number_of_lanes(current_vehicle, lines, cap)
+    if number_of_lanes is None:
+        current_vehicle.velocity = "N/A"
+        return None
+
     road_width_in_meters = number_of_lanes * avg_lane_width
     framerate = cap.get(cv2.CAP_PROP_FPS)
     frame_elapsed_time = 1 / framerate
-    d1 = current_x - prev_frame_x
-    d2 = current_y - prev_frame_y
+    d1 = current_x - first_frame_x
+    d2 = current_y - first_frame_y
     distance_from_previous_frame = np.sqrt(np.power(d1, 2) + np.power(d2, 2))
     car_width = road_width_in_meters * current_width_in_pixels / road_width_in_pixels
     distance_in_meters = distance_from_previous_frame * car_width / current_width_in_pixels
+    distance_in_meters /= current_vehicle.age
     vel = distance_in_meters * angle_offset * convert_to_kph / frame_elapsed_time
 
-    if vel < 140:
-        current_vehicle.velocity = (int(vel)//10) * 10
-    elif vel < 180:
-        current_vehicle.velocity = 140
-    else:
+    if vel == float("nan"):
         current_vehicle.velocity = "N/A"
+    else:
+        if vel < 150:
+            current_vehicle.velocity = (int(vel))
+        # elif vel < 180:
+        #     current_vehicle.velocity = 140
+        else:
+            current_vehicle.velocity = "N/A"
 
-    if (current_x, current_y) == (prev_frame_x, prev_frame_y):
-        current_vehicle.velocity = previous_frame_vehicle.velocity
+        if (current_x, current_y) == (first_frame_x, first_frame_y):
+            current_vehicle.velocity = previous_frame_vehicle.velocity
 
 
 def get_number_of_lanes(vehicle, lines, cap):
@@ -61,7 +71,7 @@ def get_number_of_lanes(vehicle, lines, cap):
     FRAME_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     current_x, current_y = vehicle.pos_x, vehicle.pos_y
     current_width, current_height = vehicle.width, vehicle.height
-    intersecting_line = [0, current_y, FRAME_WIDTH, current_y]
+    intersecting_line = [0, current_y-current_height/2, FRAME_WIDTH, current_y-current_height/2]
     intersect_points = []
     for l in lines:
         intersect_points.append(intersect_lines(l, intersecting_line))
