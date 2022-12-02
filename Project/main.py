@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from lane_detection import lanes_detection
 from labeling import label_vehicles
-from statistics import calculate_speed
+from statistics import calculate_speed, calculate_speed_with_control_lines
 from vehicle import Vehicle
 
 # INIT values
@@ -110,6 +110,8 @@ def find_objects(outputs, image, lines):
                             closest.first_pos = [closest.pos_x, closest.pos_y, closest.width, closest.height]
                         vehicles[i].age = closest.age + 1
                         vehicles[i].first_pos = closest.first_pos
+                        vehicles[i].velocity = closest.velocity
+                        calculate_speed_with_control_lines(vehicles[i], closest, cap, FRAME_COUNT)
                         previous_frame_vehicles.remove(closest)
                     else:
                         vehicles[i].id = highest_id
@@ -120,10 +122,11 @@ def find_objects(outputs, image, lines):
                         vehicles[i].id = highest_id
                         vehicles[i].first_pos = [vehicles[i].pos_x, vehicles[i].pos_y, vehicles[i].width, vehicles[i].height]
                         highest_id = highest_id + 1
-                    if np.mod(FRAME_COUNT, int(cap.get(cv2.CAP_PROP_FPS))/5) == 0:
-                        calculate_speed(vehicles[i], closest, cap, lines)
-                    else:
-                        vehicles[i].velocity = closest.velocity
+                    # calculate_speed_with_control_lines(vehicles[i], closest, cap, FRAME_COUNT)
+                    # if np.mod(FRAME_COUNT, int(cap.get(cv2.CAP_PROP_FPS))/5) == 0:
+                    #     calculate_speed(vehicles[i], closest, cap, lines)
+                    # else:
+                    #     vehicles[i].velocity = closest.velocity
                     vehicles[i].predict_movement(closest)
                 else:
                     vehicles[i].id = highest_id

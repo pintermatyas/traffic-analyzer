@@ -149,6 +149,9 @@ def draw_lines(output_image, lines):
     height = output_image.shape[0]
     width = output_image.shape[1]
 
+    # cv2.line(blank_image, (0, 3 * height // 4 - 20), (width, 3 * height // 4 - 20), (0, 0, 255), 4)
+    # cv2.line(blank_image, (0, 3 * height // 4 - 120), (width, 3 * height // 4 - 120), (0, 0, 255), 4)
+
     # cv2.line(blank_image, (0, height // 2), (width, height // 2), (0, 0, 255), 2)
 
     output_image = cv2.addWeighted(output_image, 0.8, blank_image, 1, 0.0)

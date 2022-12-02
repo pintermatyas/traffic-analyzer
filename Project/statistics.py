@@ -2,15 +2,67 @@ import cv2
 import numpy as np
 from lane_detection import intersect_lines
 
+# Coming from top to bottom
+passed_through_top_gate_id = []
+passed_through_top_gate_frame_num = []
+
+# Coming from bottom to top
+passed_through_bottom_gate_id = []
+passed_through_bottom_gate_frame_num = []
+
+
+def calculate_speed_with_control_lines(current_vehicle, previous_frame_vehicle, cap, frame_num):
+    FRAME_HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    FRAME_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    framerate = cap.get(cv2.CAP_PROP_FPS)
+
+    # Bottom control line
+    control_line1_y = 3 * FRAME_HEIGHT // 4 - 20
+    # Top control line
+    control_line2_y = 3 * FRAME_HEIGHT // 4 - 120
+
+    dist_between_control_lines = 21.36
+
+    control_pos_current_vehicle = current_vehicle.pos_y + current_vehicle.height
+    control_pos_prev_vehicle = previous_frame_vehicle.pos_y + previous_frame_vehicle.height
+
+    if current_vehicle.id in passed_through_top_gate_id and current_vehicle.id in passed_through_bottom_gate_id:
+        index_top = passed_through_top_gate_id.index(current_vehicle.id)
+        index_bot = passed_through_bottom_gate_id.index(current_vehicle.id)
+        frame_difference = passed_through_bottom_gate_frame_num[index_bot] - passed_through_top_gate_frame_num[
+            index_top]
+        elapsed_time_second = abs(frame_difference) * 1 / framerate
+
+        speed = 3.6 * dist_between_control_lines / elapsed_time_second
+        current_vehicle.velocity = int(speed)
+
+    if control_pos_current_vehicle < control_line1_y <= control_pos_prev_vehicle \
+            or control_pos_current_vehicle >= control_line1_y > control_pos_prev_vehicle:
+        if current_vehicle.id not in passed_through_bottom_gate_id:
+            passed_through_bottom_gate_id.append(current_vehicle.id)
+            passed_through_bottom_gate_frame_num.append(frame_num)
+        else:
+            index = passed_through_bottom_gate_id.index(current_vehicle.id)
+            passed_through_bottom_gate_frame_num[index] = frame_num
+
+    if control_pos_current_vehicle < control_line2_y <= control_pos_prev_vehicle \
+            or control_pos_current_vehicle >= control_line2_y > control_pos_prev_vehicle:
+        if current_vehicle.id not in passed_through_top_gate_id:
+            passed_through_top_gate_id.append(current_vehicle.id)
+            passed_through_top_gate_frame_num.append(frame_num)
+        else:
+            index = passed_through_top_gate_id.index(current_vehicle.id)
+            passed_through_top_gate_frame_num[index] = frame_num
+
 
 def calculate_speed(current_vehicle, previous_frame_vehicle, cap, lines):
     FRAME_HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     FRAME_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    cv2.line(cap.read()[1], (0, FRAME_HEIGHT // 4), (FRAME_WIDTH, FRAME_HEIGHT // 4), (204, 12, 201), 8)
 
     # Width of vehicle is approx. 2 m
     avg_vehicle_width = 2
     avg_lane_width = 3.5
-
 
     convert_to_kph = 3.6
     current_x, current_y = current_vehicle.pos_x, current_vehicle.pos_y
@@ -21,7 +73,7 @@ def calculate_speed(current_vehicle, previous_frame_vehicle, cap, lines):
     # prev_frame_width, prev_frame_height = previous_frame_vehicle.width, previous_frame_vehicle.height
 
     if current_y + current_height < 3 * FRAME_HEIGHT // 4:
-        angle_offset = 3.2 + 1.2*(1-(current_y - 3*FRAME_HEIGHT//4)/(3*FRAME_HEIGHT//4))
+        angle_offset = 3.2 + 1.2 * (1 - (current_y - 3 * FRAME_HEIGHT // 4) / (3 * FRAME_HEIGHT // 4))
     else:
         angle_offset = 3.2
 
@@ -71,7 +123,7 @@ def get_number_of_lanes(vehicle, lines, cap):
     FRAME_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     current_x, current_y = vehicle.pos_x, vehicle.pos_y
     current_width, current_height = vehicle.width, vehicle.height
-    intersecting_line = [0, current_y-current_height/2, FRAME_WIDTH, current_y-current_height/2]
+    intersecting_line = [0, current_y - current_height / 2, FRAME_WIDTH, current_y - current_height / 2]
     intersect_points = []
     for l in lines:
         intersect_points.append(intersect_lines(l, intersecting_line))
