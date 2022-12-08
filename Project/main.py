@@ -11,7 +11,7 @@ from statistics import calculate_speed, calculate_speed_with_control_lines
 from vehicle import Vehicle
 
 # INIT values
-SAVE_VIDEO = True
+SAVE_VIDEO = False
 SHOW_PLOTS = False
 VIEW_MASKED = False
 YOLO_VERSION = 4
@@ -195,10 +195,10 @@ while True:
     imgPlot, lines = lanes_detection(img, imgPlot)
     number_of_cars, vehicles = find_objects(output, img, lines)
 
-    # if not VIEW_MASKED:
-    cv2.putText(img, f'TOTAL NUMBER OF VEHICLES: {highest_id - 1}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-    img = cv2.addWeighted(img, 1.0, imgPlot, 0.6, 0)
+    if not VIEW_MASKED:
+        cv2.putText(img, f'TOTAL NUMBER OF VEHICLES: {highest_id - 1}', (FRAME_WIDTH - 350, FRAME_HEIGHT - 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+        img = cv2.addWeighted(img, 1.0, imgPlot, 0.6, 0)
 
     # Test filters
     if VIEW_MASKED:

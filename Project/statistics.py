@@ -31,10 +31,11 @@ def calculate_speed_with_control_lines(current_vehicle, previous_frame_vehicle, 
         index_bot = passed_through_bottom_gate_id.index(current_vehicle.id)
         frame_difference = passed_through_bottom_gate_frame_num[index_bot] - passed_through_top_gate_frame_num[
             index_top]
-        elapsed_time_second = abs(frame_difference) * 1 / framerate
+        if frame_difference != 0:
+            elapsed_time_second = abs(frame_difference) * 1 / framerate
 
-        speed = 3.6 * dist_between_control_lines / elapsed_time_second
-        current_vehicle.velocity = int(speed)
+            speed = 3.6 * dist_between_control_lines / elapsed_time_second
+            current_vehicle.velocity = int(speed)
 
     if control_pos_current_vehicle < control_line1_y <= control_pos_prev_vehicle \
             or control_pos_current_vehicle >= control_line1_y > control_pos_prev_vehicle:
