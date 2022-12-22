@@ -1,8 +1,4 @@
-# Temalab22-23-1: Vehicle Tracking
-
-Mivel a Git nem engedi hogy >100MB méretű filet pusholjak, ezért ahhoz hogy működjön, töltsd le ezt: https://pjreddie.com/media/files/yolov3.weights 
-
-A sample.py fileban a model_file_path változó helyére írd be az előző .weights file elérési útját.
+# Témalaboratórium 2022-23/1
 
 Tracking előtt:
 
