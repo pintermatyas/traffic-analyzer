@@ -51,8 +51,3 @@ Az egymásba csúszó vagy egymáshoz nagyon közel lévő vonalakat kiszűrtem 
 Ezután ismét a sebesség meghatározására mentem rá, sikerült egy jobb verziót összehozni:
 
 ![Output](md_files/speed-determination.gif)
-
-
-## _TODO_
-- GPU-ra kiszervezés, mert CPU-n lassú &rarr; próbáltam, nem tudom manuálisan buildelni hozzá az opencv-t 
-- Sebesség meghatározása pontatlan &rarr; Ötlet megvan, stabil lane detection kell hozzá!
